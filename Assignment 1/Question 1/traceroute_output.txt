@@ -1,0 +1,23 @@
+traceroute to 139.130.4.5 (139.130.4.5), 30 hops max, 60 byte packets
+ 1  LAPTOP-BEGN0H0M.mshome.net (172.19.112.1)  1.050 ms  0.985 ms  0.970 ms
+ 2  10.22.19.254 (10.22.19.254)  1.445 ms  1.561 ms  1.546 ms
+ 3  10.25.100.9 (10.25.100.9)  1.198 ms  1.103 ms  1.075 ms
+ 4  10.26.0.14 (10.26.0.14)  1.133 ms  1.103 ms  0.800 ms
+ 5  ccgw2m.iitm.ac.in (103.158.42.1)  1.008 ms  0.994 ms  1.204 ms
+ 6  10.119.232.137 (10.119.232.137)  1.026 ms  1.677 ms *
+ 7  * * *
+ 8  * * 10.119.73.122 (10.119.73.122)  2.497 ms
+ 9  115.247.85.129 (115.247.85.129)  3.044 ms * *
+10  * 172.31.3.25 (172.31.3.25)  4.344 ms 172.31.2.101 (172.31.2.101)  2.642 ms
+11  103.198.140.170 (103.198.140.170)  3.540 ms  3.529 ms 103.198.140.64 (103.198.140.64)  5.114 ms
+12  103.198.140.209 (103.198.140.209)  43.604 ms 103.198.140.15 (103.198.140.15)  36.408 ms 103.198.140.83 (103.198.140.83)  36.916 ms
+13  103.198.140.17 (103.198.140.17)  37.622 ms unknown.telstraglobal.net (210.57.38.114)  206.132 ms  206.115 ms
+14  i-91.sgcn-core01.telstraglobal.net (202.84.224.198)  207.450 ms  207.435 ms unknown.telstraglobal.net (210.57.38.112)  220.531 ms
+15  i-91.sgcn-core01.telstraglobal.net (202.84.224.198)  207.403 ms  238.543 ms  238.493 ms
+16  i-91.sgcn-core01.telstraglobal.net (202.84.224.198)  237.760 ms  238.451 ms 202.84.249.253 (202.84.249.253)  247.295 ms
+17  bundle-ether5.pie-core10.perth.telstra.net (203.50.9.1)  235.011 ms bundle-ether3.way-core10.adelaide.telstra.net (203.50.6.234)  245.533 ms bundle-ether5.wel-core10.perth.telstra.net (203.50.9.5)  249.460 ms
+18  bundle-ether16.exi-core10.melbourne.telstra.net (203.50.6.231)  244.672 ms  243.052 ms bundle-ether3.fli-core10.adelaide.telstra.net (203.50.6.232)  243.677 ms
+19  bundle-ether3.fli-core10.adelaide.telstra.net (203.50.6.232)  240.757 ms bundle-ether12.chw-core10.sydney.telstra.net (203.50.11.124)  244.624 ms bundle-ether3.fli-core10.adelaide.telstra.net (203.50.6.232)  240.735 ms
+20  bundle-ether12.chw-core10.sydney.telstra.net (203.50.11.124)  244.604 ms bundle-ether4-3.ken-core10.sydney.telstra.net (203.50.6.226)  249.334 ms bundle-ether12.chw-core10.sydney.telstra.net (203.50.11.124)  243.130 ms
+21  bundle-ether12.ken-core10.sydney.telstra.net (203.50.11.122)  242.037 ms 203.50.11.221 (203.50.11.221)  231.969 ms  235.935 ms
+22  139.130.4.5 (139.130.4.5)  240.789 ms  243.404 ms 203.50.11.221 (203.50.11.221)  232.638 ms

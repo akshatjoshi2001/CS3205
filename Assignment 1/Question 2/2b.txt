@@ -1,0 +1,5 @@
+0 packets exchanged for 1st 5 seconds
+8 packets exchanged between 6th and 7th second
+
+4326 bytes sent (34 packets outgoing)
+22063 bytes recieved (26 packets incoming)
