@@ -20,60 +20,72 @@ class Game
 
     bool isPlayer1Turn; 
     int32_t winner; // 0->Game continues, 1-> Player 1 Won, 2-> Player 2 Won, 3->Tie, 4-> Disconnected/Abandoned
-    std::vector<std::vector<uint32_t>> board;
-    std::vector<std::pair<uint32_t,std::pair<uint32_t,uint32_t>>> moves;
+
 
     public:
+        std::vector<std::vector<uint32_t>> board;
+    std::vector<std::pair<uint32_t,std::pair<uint32_t,uint32_t>>> moves;
         Game(uint32_t player1ID,uint32_t player2ID)
         {
-            board = std::vector<std::vector<uint32_t>>(3,std::vector<uint32_t>(3,0));
+            board.resize(3,{0,0,0});
+
+          
             this->winner = 0;
             this->player1ID = player1ID;
             this->player2ID = player2ID;
+            this->isPlayer1Turn = true;
         }
 
         uint32_t* serialise()
         {
            
-            uint32_t* data =  new uint32_t(13);
+            uint32_t* data =  new uint32_t[13];
            
-            *data = htonl(player1ID);
-            data++;
-            *data = htonl(player2ID);
-            data++;
-            *data = htonl((uint32_t) winner);
-            data++;
+           
+            data[0] = htonl(player1ID);
+           
+            data[1] = htonl(player2ID);
+            
+            data[2] = htonl((uint32_t) winner);
+            int idx = 3;
             for(int row=0;row<3;row++)
             {
                 for(int col=0;col<3;col++)
                 {
-                    *data = htonl(board[row][col]);
-                    data++;
+                    
+                    data[idx] = board[row][col];
+                    idx++;
                 }
             }
            
             if(isPlayer1Turn)
             {
-                *data = htonl((uint32_t)1);
+                data[idx] = htonl((uint32_t)1);
             }
             else
             {
-                *data = (uint32_t)0;
+                data[idx] = (uint32_t)0;
             }
+           
             
             return data;
 
+        }
+
+        bool isP1Turn()
+        {
+            return isPlayer1Turn;
         }
 
 
         void deserialise(uint32_t* data)
         {
             player1ID = ntohl(data[0]);
-            cout << player1ID << endl;
+           
             player2ID = ntohl(data[1]);
-             cout << player2ID << endl;
+           
             winner = (int32_t)ntohl(data[2]);
-            cout << winner << endl;
+           
             int idx = 3;
             for(int row=0;row<3;row++)
             {
@@ -129,6 +141,22 @@ class Game
                 return;
             }
 
+            for(int row=0;row<3;row++)
+            {
+                for(int col=0;col<3;col++)
+                {
+                    if(board[row][col] == 0)
+                    {
+                        isTie = false;
+                        break;
+                    }
+                }
+            }
+            if(isTie)
+            {
+                winner = 3;
+            }
+
 
 
 
@@ -139,17 +167,23 @@ class Game
         {
             if(winner != 0)
                 return -1;
+            if(row>=3 || row<-1 || col>=3 || col<-1)
+                return -1;
             if(player1ID == 0 || player2ID == 0)
             {
                 return -1;
             }
             if(isPlayer1Turn && player ==1 || (!isPlayer1Turn && player == 2))
             {
+                
                 if(board[row][col] == 0)
                 {
+                   
                     board[row][col] = player;
                     isPlayer1Turn = !isPlayer1Turn;
+                  
                     checkWinOrTie();
+                   
                     moves.push_back({player,{row,col}});
                     return winner; 
                 }
@@ -169,9 +203,48 @@ class Game
             return winner;
         }
 
+        uint32_t getPlayer1ID()
+        {
+            return player1ID;
+        }
+        uint32_t getPlayer2ID()
+        {
+            return player2ID;
+        }
+
         void abandonGame()
         {
             winner = 4;
+        }
+
+        void displayBoard()
+        {
+            cout << "\033[2J\033[1;1H"; // Clear Screen
+            for(int row=0;row<3;row++)
+            {
+                for(int col=0;col<3;col++)
+                {
+                    cout << "|";
+                  
+                    if(board[row][col] == 1)
+                    {
+                        cout << "X";
+                    }
+                    else if(board[row][col] == 2)
+                    {
+                       cout << "O";
+                    }
+                    else
+                    {
+                        cout << "_";
+                    }
+                  
+                    cout << "|";
+
+
+                }
+                cout << endl;
+            }
         }
 
 
