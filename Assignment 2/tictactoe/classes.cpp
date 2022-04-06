@@ -220,6 +220,7 @@ class Game
         void displayBoard()
         {
             cout << "\033[2J\033[1;1H"; // Clear Screen
+            cout << "Match between " << player1ID << " (X) and " << player2ID << "(O)" << endl;
             for(int row=0;row<3;row++)
             {
                 for(int col=0;col<3;col++)

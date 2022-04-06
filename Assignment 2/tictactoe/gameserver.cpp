@@ -3,6 +3,7 @@
 #include <arpa/inet.h>
 #include <unistd.h>
 #include <string.h>
+#include <fstream>
 #include <stdio.h>
 #include <cstdlib>
 #include <thread>
@@ -13,10 +14,13 @@
 #include<queue>
 #include <fcntl.h>
 #include <sys/select.h>
+#include <signal.h>
+
 using namespace std;
 
 queue<Player*> q;
 unordered_map<int,Player*> playerMap;
+vector<Game*> games;
 int id = 1;
 
 pair<int,int> getMove(Player* p)
@@ -31,12 +35,18 @@ pair<int,int> getMove(Player* p)
     timeout.tv_usec = 0;
 
     int ret =  select(p->fd+1,&set,nullptr,nullptr,&timeout);  //
-    if(ret <= 0)
+    if(ret < 0)
     {
     
         delete[] move;
         
         return {-1,-1};
+    }
+    else if(ret == 0)
+    {
+        delete[] move;
+        
+        return {-2,-2};
     }
     else{
         read(p->fd,move,sizeof(uint32_t)*2);
@@ -68,6 +78,7 @@ void broadcastGameState(Game* g)
         uint32_t* serialisedGame = g->serialise();
        write(playerMap[g->getPlayer1ID()]->fd, serialisedGame,sizeof(uint32_t)*13);
         write(playerMap[g->getPlayer2ID()]->fd, serialisedGame,sizeof(uint32_t)*13);
+       
    
    
      delete[] serialisedGame; // Avoid memory leaks :)
@@ -90,11 +101,18 @@ void handleGame(Game* g)
                int row = move.first;
                int col = move.second;
 
-               if(row == -1 && col == -1)
+               if( (row == -1) && (col == -1) ) 
                {
                    g->abandonGame();
                  
                    sendToPlayer(g,2);
+                  
+                   break;
+               }
+               else if( (row == -2) && (col == -2) )
+               {
+                   g->abandonGame();
+                   broadcastGameState(g);
                   
                    break;
                }
@@ -119,6 +137,13 @@ void handleGame(Game* g)
                   
                    sendToPlayer(g,1);
                   
+                   break;
+               }
+               else if(row == -2 && col == -2)
+               {
+                    g->abandonGame();
+                   broadcastGameState(g);
+                   
                    break;
                }
                
@@ -163,6 +188,7 @@ void handleClient(int clientfd)
         Game* g = new Game(p1.id,p2.id);
         
         broadcastGameState(g);
+        games.push_back(g);
         
     
        
@@ -171,10 +197,58 @@ void handleClient(int clientfd)
     }    
 }
 
+static void handleSigInt(int sig)
+{
+    ofstream out{ "logs.txt" };
+    cout << "Saving Logs and exiting..." << endl;
+
+    out << "Games played: " << games.size() << endl;
+
+    for(int i=0;i<games.size();i++)
+    {
+        out << "----------------------------------------" << endl;
+        out << "Game Number " << (i+1) << ": Played between " << games[i]->getPlayer1ID() << "(X) and " << games[i]->getPlayer2ID() << "(O) " << endl;
+        int winner = games[i]->getWinner();
+        out << "Game result: ";
+        if(winner == 0)
+        {
+            out << "Was in progress";
+        }
+        if(winner == 1)
+        {
+            out << "Player X won";
+        }
+        if(winner == 2)
+        {
+            out << "Player O won";
+        }
+        if(winner == 3)
+        {
+            out << "Game was a tie";
+        }
+        if(winner == 4)
+        {
+            out << "Player disconnected/timeout";
+        }
+
+        out<<endl;
+        for(int j=0;j<games[i]->moves.size();j++)
+        {
+            out << ((games[i]->moves[j].first == 1)?"X":"O");
+            out << " moved at position: " << games[i]->moves[j].second.first << " " << games[i]->moves[j].second.second << endl;
+
+        }
+    }
+
+    exit(EXIT_SUCCESS);
+}
+
 
 int main()
 {
+    cout << "Press Ctrl+C to save logs and exit" << endl;
     int fd = socket(AF_INET,SOCK_STREAM,0);
+    signal(SIGINT, handleSigInt);
     sockaddr_in address;
     if(fd == -1)
     {
@@ -184,7 +258,7 @@ int main()
 
     address.sin_family = AF_INET;
     address.sin_addr.s_addr = INADDR_ANY;
-    address.sin_port = htons(8080);
+    address.sin_port = htons(8000);
 
     unsigned int addrlen = sizeof(address);
 

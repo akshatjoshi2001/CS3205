@@ -21,8 +21,8 @@ int main()
     }
 
     address.sin_family = AF_INET;
-    address.sin_addr.s_addr = INADDR_ANY;
-    address.sin_port = htons(8080);
+    address.sin_addr.s_addr = inet_addr("127.0.0.1");;
+    address.sin_port = htons(8000);
 
     unsigned int addrlen = sizeof(address);
 
@@ -38,11 +38,18 @@ int main()
   
     Player p(id,fd);
     cout << "You are id " << id << endl;
+    cout << "Waiting for opponent to join... "<< endl;
     Game* g = new Game(0,0);
     while(true)
     {
       uint32_t* data = new uint32_t[13];
-        read(fd,data,sizeof(uint32_t)*13);
+        int ret = read(fd,data,sizeof(uint32_t)*13);
+
+        if(ret <= 0)
+        {
+            cout << "Disconnected from server. " << endl;
+            break;
+        }
         
         g->deserialise(data);
         
@@ -56,8 +63,9 @@ int main()
 
         if((g->isP1Turn() && g->getPlayer1ID() == id) || (!(g->isP1Turn()) && g->getPlayer2ID() == id))
         {
+             
+            cout << "Your turn to move: <row col> (move within 15 seconds or else timeout will happen) ";
            
-            cout << "Your turn to move: <row col> ";
             int row;
             int col;
             cin >> row >> col;
@@ -95,7 +103,7 @@ int main()
     }   
     else if(g->getWinner() == 4)
     {
-        cout << "Sorry your partner disconnected/timed out. " << endl;
+        cout << "Sorry you or your partner disconnected/timed out. " << endl;
         break;
     }
     
