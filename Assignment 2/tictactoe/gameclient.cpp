@@ -2,13 +2,48 @@
 #include <sys/socket.h>
 #include <arpa/inet.h>
 #include <unistd.h>
+#include <chrono>
+#include <thread>
 #include <string.h>
 #include <stdio.h>
 #include<iostream>
 #include<queue>
 using namespace std;
 
+bool askGameRestart(int fd)
+{
+    cout << "Would you like to restart the game? (yes/no)"<<endl;
+    string ans;
+    cin >> ans;
+    uint32_t decision;
+    if(ans == "yes" || ans == "YES" || ans == "y" || ans == "Y")
+    {
+        decision = 1;
+    }
+    else
+    {
+        decision = 0;
+       
+       
+    }
+   
+    write(fd,&decision,sizeof(uint32_t));
+    
+    int32_t finaldec;
+    read(fd,&finaldec,sizeof(int32_t));
 
+    if(finaldec == 0)
+    {
+        cout <<"Your opponent denied playing again"<<endl;
+        return false;
+    }
+    if(finaldec == -1)
+    {
+        cout << "Both players denied." << endl;
+        return false;
+    }
+    return true;
+}
 
 int main()
 {
@@ -57,25 +92,39 @@ int main()
 
 
          g->displayBoard();
-    if(g->getWinner() == 0)
+    if(g->getWinner() <= 0)
     {
-     
+       if(g->getWinner() < 0)
+       {
+           cout << "Your previous move was illegal!" << endl;
+       }
 
         if((g->isP1Turn() && g->getPlayer1ID() == id) || (!(g->isP1Turn()) && g->getPlayer2ID() == id))
         {
              
             cout << "Your turn to move: <row col> (move within 15 seconds or else timeout will happen) ";
            
-            int row;
-            int col;
+            int row=-1;
+            int col=-1;
+            auto t_start = std::chrono::high_resolution_clock::now();
             cin >> row >> col;
+            auto t_end = std::chrono::high_resolution_clock::now();
+            double elapsed_time_ms = std::chrono::duration<double, std::milli>(t_end-t_start).count();
+
+
+
+
+           
 
             cout << endl;
+            if(!(row ==-1 || col==-1) && !(elapsed_time_ms >= 14000))
+            {
 
-            uint32_t* move = new uint32_t[2];
-            move[0] = row;
-            move[1] = col;
-            write(fd,move,sizeof(uint32_t)*2);
+                uint32_t* move = new uint32_t[2];
+                move[0] = row;
+                move[1] = col;
+                write(fd,move,sizeof(uint32_t)*2);
+            }
           
 
         }
@@ -88,24 +137,42 @@ int main()
     else if(g->getWinner() == 1)
     {
         cout << "Player X (id: " << g->getPlayer1ID() << ") won! " << endl;
-        break;
+        if(!askGameRestart(fd))
+            break;
+
         
     }
     else if(g->getWinner() == 2)
     {
         cout << "Player O (id: " << g->getPlayer2ID() << ") won! " << endl;
-        break;
+        if(!askGameRestart(fd))
+            break;
     }
     else if(g->getWinner() == 3)
     {
          cout << "Game is a tie." << endl;
-         break;
+         if(!askGameRestart(fd))
+            break;
     }   
     else if(g->getWinner() == 4)
     {
-        cout << "Sorry you or your partner disconnected/timed out. " << endl;
+        cout << "Sorry player X timed out. " << endl;
+
+         if(!askGameRestart(fd))
+            break;
+    }
+    else if(g->getWinner() == 5)
+    {
+        cout << "Sorry player O timed out. " << endl;
+         if(!askGameRestart(fd))
+            break;
+    }
+    else if(g->getWinner() == 6)
+    {
+        cout << "Sorry your partner disconnected. " << endl;
         break;
     }
+    
     
 }
 

@@ -1,5 +1,3 @@
-
-
 #include <vector>
 #include <cstdint>
 #include <sys/socket.h>
@@ -8,6 +6,8 @@
 #include <string.h>
 #include<iostream>
 #include <stdio.h>
+
+
 using std::uint32_t;
 using namespace std;
 
@@ -212,9 +212,9 @@ class Game
             return player2ID;
         }
 
-        void abandonGame()
+        void abandonGame(int type)
         {
-            winner = 4;
+            winner = type;
         }
 
         void displayBoard()

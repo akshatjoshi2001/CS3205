@@ -1,20 +1,6 @@
 #include "classes.cpp"
-#include <sys/socket.h>
-#include <arpa/inet.h>
-#include <unistd.h>
-#include <string.h>
-#include <fstream>
-#include <stdio.h>
-#include <cstdlib>
-#include <thread>
-#include <sys/types.h>
-#include <sys/stat.h>
-#include <unordered_map>
-#include<iostream>
-#include<queue>
-#include <fcntl.h>
-#include <sys/select.h>
-#include <signal.h>
+#include "decls.hpp"
+
 
 using namespace std;
 
@@ -22,6 +8,81 @@ queue<Player*> q;
 unordered_map<int,Player*> playerMap;
 vector<Game*> games;
 int id = 1;
+
+
+void createGame(int player1ID,int player2ID)
+{
+        Game* g = new Game(player1ID,player2ID);
+        
+        broadcastGameState(g);
+        games.push_back(g);
+
+         thread gameThread(handleGame,g);
+         gameThread.detach();
+    
+    
+}
+
+
+void askForGameRestart(Game* g)
+{
+  Player* p1 = playerMap[g->getPlayer1ID()];
+  Player* p2 = playerMap[g->getPlayer2ID()];
+  
+  uint32_t decision1=0;
+  uint32_t decision2=0;
+  
+  int ret1 = read(p1->fd,&decision1,sizeof(uint32_t));
+  int ret2 = read(p2->fd,&decision2,sizeof(uint32_t));
+  
+  if(ret1 > 0 && ret2 >0)
+  {
+     
+      if(decision1 == 1 && decision2 == 1)
+      {
+            write(p1->fd,&decision2,sizeof(uint32_t));
+        write(p2->fd,&decision1,sizeof(uint32_t));
+        
+        createGame(p1->id,p2->id);
+      
+        return;
+      }
+      else if(decision1 == 1)
+      {
+         
+           write(p1->fd,&decision2,sizeof(uint32_t));
+      }
+      else if(decision2 == 1)
+      {
+           write(p2->fd,&decision1,sizeof(uint32_t));
+      }
+      else
+      {
+          decision1 = -1;
+          decision2 = -1;
+
+         write(p1->fd,&decision2,sizeof(uint32_t));
+         write(p2->fd,&decision1,sizeof(uint32_t));
+         
+
+      }
+  }
+  else if(ret1 <= 0 && ret2 > 0)
+  {
+     
+    write(p2->fd,&decision1,sizeof(uint32_t));
+
+  }
+  else if(ret2 <= 0 && ret1 > 0)
+  {
+     
+       write(p1->fd,&decision2,sizeof(uint32_t));
+
+  }
+
+
+
+}
 
 pair<int,int> getMove(Player* p)
 {
@@ -103,7 +164,7 @@ void handleGame(Game* g)
 
                if( (row == -1) && (col == -1) ) 
                {
-                   g->abandonGame();
+                   g->abandonGame(6);
                  
                    sendToPlayer(g,2);
                   
@@ -111,8 +172,9 @@ void handleGame(Game* g)
                }
                else if( (row == -2) && (col == -2) )
                {
-                   g->abandonGame();
+                   g->abandonGame(4);
                    broadcastGameState(g);
+                    askForGameRestart(g);
                   
                    break;
                }
@@ -133,7 +195,7 @@ void handleGame(Game* g)
                int col = move.second;
                 if(row == -1 && col == -1)
                {
-                  g->abandonGame();
+                  g->abandonGame(6);
                   
                    sendToPlayer(g,1);
                   
@@ -141,8 +203,10 @@ void handleGame(Game* g)
                }
                else if(row == -2 && col == -2)
                {
-                    g->abandonGame();
+                    g->abandonGame(5);
                    broadcastGameState(g);
+
+                   askForGameRestart(g);
                    
                    break;
                }
@@ -160,9 +224,15 @@ void handleGame(Game* g)
 
         
     }
+    if(g->getWinner() == 1 || g->getWinner() ==2 || g->getWinner() == 3)
+    {
+        
+        askForGameRestart(g);
+    }
 
 
 }
+
 
 void handleClient(int clientfd)
 {
@@ -184,16 +254,7 @@ void handleClient(int clientfd)
         Player p2 = *(p);
         q.pop();
        
-      
-        Game* g = new Game(p1.id,p2.id);
-        
-        broadcastGameState(g);
-        games.push_back(g);
-        
-    
-       
-         thread gameThread(handleGame,g);
-         gameThread.detach();
+        createGame(p1.id,p2.id);
     }    
 }
 
@@ -228,7 +289,15 @@ static void handleSigInt(int sig)
         }
         if(winner == 4)
         {
-            out << "Player disconnected/timeout";
+            out << "Player X timed out";
+        }
+        if(winner == 5)
+        {
+            out << "Player O timed out";
+        }
+        if(winner == 6)
+        {
+            out << "One of the players disconnected from the server.";
         }
 
         out<<endl;

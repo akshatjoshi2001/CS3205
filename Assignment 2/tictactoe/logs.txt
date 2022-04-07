@@ -1,4 +1,9 @@
 Games played: 1
 ----------------------------------------
 Game Number 1: Played between 1(X) and 2(O) 
-Game result: Was in progress
+Game result: Player X won
+X moved at position: 0 0
+O moved at position: 0 1
+X moved at position: 1 1
+O moved at position: 0 2
+X moved at position: 2 2
