@@ -23,6 +23,10 @@ void createGame(int player1ID,int player2ID)
     
 }
 
+bool checkfd(int fd)
+{
+    return fcntl(fd, F_GETFL) != -1 || errno != EBADF;
+}
 
 void askForGameRestart(Game* g)
 {
@@ -106,11 +110,17 @@ pair<int,int> getMove(Player* p)
     else if(ret == 0)
     {
         delete[] move;
+       
         
         return {-2,-2};
     }
     else{
-        read(p->fd,move,sizeof(uint32_t)*2);
+      
+        int retcheck = read(p->fd,move,sizeof(uint32_t)*2);
+        if(retcheck == 0)
+        {
+            return {-1,-1};
+        }
     }
     uint32_t row = move[0];
     uint32_t col = move[1];
@@ -122,11 +132,11 @@ pair<int,int> getMove(Player* p)
 void sendToPlayer(Game* g,int player)
 {
     uint32_t* serialisedGame = g->serialise();
-    if(player == 1)
+    if(player == 1 && checkfd(playerMap[g->getPlayer1ID()]->fd))
     {
        write(playerMap[g->getPlayer1ID()]->fd, serialisedGame,sizeof(uint32_t)*13);
     }
-    else if(player == 2)
+    else if(player == 2 && checkfd(playerMap[g->getPlayer2ID()]->fd))
     {
         write(playerMap[g->getPlayer2ID()]->fd, serialisedGame,sizeof(uint32_t)*13);
     }
@@ -136,13 +146,11 @@ void sendToPlayer(Game* g,int player)
 
 void broadcastGameState(Game* g)
 {
-        uint32_t* serialisedGame = g->serialise();
-       write(playerMap[g->getPlayer1ID()]->fd, serialisedGame,sizeof(uint32_t)*13);
-        write(playerMap[g->getPlayer2ID()]->fd, serialisedGame,sizeof(uint32_t)*13);
-       
-   
-   
-     delete[] serialisedGame; // Avoid memory leaks :)
+    
+       sendToPlayer(g,1);
+       sendToPlayer(g,2);
+     
+
 }
 
 
@@ -304,7 +312,7 @@ static void handleSigInt(int sig)
         for(int j=0;j<games[i]->moves.size();j++)
         {
             out << ((games[i]->moves[j].first == 1)?"X":"O");
-            out << " moved at position: " << games[i]->moves[j].second.first << " " << games[i]->moves[j].second.second << endl;
+            out << " moved at position: " << games[i]->moves[j].second.first+1 << " " << games[i]->moves[j].second.second+1 << endl;
 
         }
     }

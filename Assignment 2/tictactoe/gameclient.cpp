@@ -121,8 +121,8 @@ int main()
             {
 
                 uint32_t* move = new uint32_t[2];
-                move[0] = row;
-                move[1] = col;
+                move[0] = row-1;
+                move[1] = col-1;
                 write(fd,move,sizeof(uint32_t)*2);
             }
           
