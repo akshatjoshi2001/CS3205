@@ -1,9 +1,21 @@
-Games played: 1
+Games played: 4
 ----------------------------------------
 Game Number 1: Played between 1(X) and 2(O) 
-Game result: Player X won
+Game result: Player O timed out
 X moved at position: 1 1
+O moved at position: 2 2
+X moved at position: 1 0
 O moved at position: 1 2
-X moved at position: 2 1
-O moved at position: 1 3
+X moved at position: 1 3
+----------------------------------------
+Game Number 2: Played between 1(X) and 2(O) 
+Game result: Player X timed out
+----------------------------------------
+Game Number 3: Played between 3(X) and 4(O) 
+Game result: Player O timed out
+X moved at position: 1 1
+O moved at position: 2 3
 X moved at position: 3 1
+----------------------------------------
+Game Number 4: Played between 3(X) and 4(O) 
+Game result: One of the players disconnected from the server.

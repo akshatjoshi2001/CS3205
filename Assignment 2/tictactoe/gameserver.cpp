@@ -9,7 +9,7 @@ unordered_map<int,Player*> playerMap;
 vector<Game*> games;
 int id = 1;
 
-
+// Create the game using the player ids
 void createGame(int player1ID,int player2ID)
 {
         Game* g = new Game(player1ID,player2ID);
@@ -23,11 +23,13 @@ void createGame(int player1ID,int player2ID)
     
 }
 
+// Check if the file descriptor is still valid
 bool checkfd(int fd)
 {
     return fcntl(fd, F_GETFL) != -1 || errno != EBADF;
 }
 
+// Ask clients if they want to restart the game
 void askForGameRestart(Game* g)
 {
   Player* p1 = playerMap[g->getPlayer1ID()];
@@ -87,7 +89,7 @@ void askForGameRestart(Game* g)
 
 
 }
-
+// Fetch the move from the player
 pair<int,int> getMove(Player* p)
 {
     uint32_t* move = new uint32_t[2];
@@ -125,10 +127,17 @@ pair<int,int> getMove(Player* p)
     uint32_t row = move[0];
     uint32_t col = move[1];
     delete[] move;
+    if((row==-1 && col ==-1) || (row==-2 && col ==-2))
+    {
+        row = -3;
+        col = -3;
+    }
     return {row,col};
    
 
 }
+
+// Send the game state to the player specified.
 void sendToPlayer(Game* g,int player)
 {
     uint32_t* serialisedGame = g->serialise();
@@ -143,7 +152,7 @@ void sendToPlayer(Game* g,int player)
    
      delete[] serialisedGame; 
 }
-
+// Send game state to both players in a game.
 void broadcastGameState(Game* g)
 {
     
@@ -153,7 +162,7 @@ void broadcastGameState(Game* g)
 
 }
 
-
+// Function to handle gameplay between two players. Runs in a seperate thread for each game.
 void handleGame(Game* g)
 {
     
@@ -241,7 +250,7 @@ void handleGame(Game* g)
 
 }
 
-
+// Accept clients sequentially
 void handleClient(int clientfd)
 {
    
@@ -265,7 +274,7 @@ void handleClient(int clientfd)
         createGame(p1.id,p2.id);
     }    
 }
-
+// Handle SIGINT event by saving logs and exiting
 static void handleSigInt(int sig)
 {
     ofstream out{ "logs.txt" };

@@ -10,6 +10,7 @@
 #include<queue>
 using namespace std;
 
+// Function to check if the players want to restart the game
 bool askGameRestart(int fd)
 {
     cout << "Would you like to restart the game? (yes/no)"<<endl;
